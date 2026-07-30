@@ -24,7 +24,7 @@ export const config: WebdriverIO.Config = {
   // Surchargé par chaque profil (wdio.android.native.conf.ts / wdio.android.web.conf.ts).
   capabilities: [],
 
-  hostname: process.env.APPIUM_HOST || 'localhost',
+  hostname: process.env.APPIUM_HOST || '127.0.0.1',
   port: Number(process.env.APPIUM_PORT) || 4723,
   path: process.env.APPIUM_PATH || '/',
 
@@ -38,7 +38,7 @@ export const config: WebdriverIO.Config = {
           {
             command: 'appium',
             args: {
-              address: 'localhost',
+              address: '127.0.0.1',
               port: 4723,
               allowInsecure: 'chromedriver_autodownload',
             },
