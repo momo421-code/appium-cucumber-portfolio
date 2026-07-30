@@ -1,0 +1,9 @@
+node_modules/
+dist/
+reports/
+apps/*.apk
+apps/*.ipa
+!apps/.gitkeep
+.env
+*.log
+.DS_Store

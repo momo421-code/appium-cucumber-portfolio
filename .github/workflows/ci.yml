@@ -1,0 +1,119 @@
+name: Appium Cucumber E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  native-app-tests:
+    name: Native app tests (Android emulator)
+    # GitHub-hosted macOS runners (Intel and Apple Silicon) do NOT support
+    # hardware virtualization (HVF) for nested VMs, so the Android emulator
+    # cannot boot there (confirmed limitation, see actions/runner-images#9460).
+    # GitHub-hosted Linux runners DO support KVM hardware acceleration, so we
+    # use ubuntu-latest with x86_64 system images instead.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download demo APK
+        run: |
+          mkdir -p apps
+          curl -L -o apps/my-demo-app-android.apk \
+            https://github.com/saucelabs/my-demo-app-android/releases/latest/download/mda-2.2.0-25.apk || \
+          echo "Adapter l'URL/version de la release si le nom d'asset a changé"
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run native tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: npm run test:native
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-native
+          path: reports/allure-results
+
+  mobile-web-tests:
+    name: Mobile web tests (Chrome on Android emulator)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run web tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: npm run test:web
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-web
+          path: reports/allure-results
+
+  publish-report:
+    name: Generate & publish Allure report
+    needs: [native-app-tests, mobile-web-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          path: reports/allure-results
+          merge-multiple: true
+      - name: Generate Allure report
+        run: npm run report:generate
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-html-report
+          path: reports/allure-report

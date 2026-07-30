@@ -1,0 +1,48 @@
+version: '3.8'
+
+# Lance un émulateur Android + serveur Appium "clé en main" via l'image
+# budtmo/docker-android, sans installation locale du SDK Android.
+#
+# Usage :
+#   1. Placer l'APK dans ./apps/my-demo-app-android.apk (voir apps/README.md)
+#   2. docker compose up -d
+#   3. Suivre le démarrage de l'émulateur (peut prendre 2-5 min la 1ère fois) :
+#        docker compose logs -f android-emulator
+#   4. Visualiser l'écran de l'émulateur dans le navigateur : http://localhost:6080
+#   5. Lancer les tests depuis l'hôte, connectés au conteneur :
+#        APPIUM_HOST=localhost APPIUM_PORT=4723 APPIUM_PATH=/ \
+#        ANDROID_APP_PATH=/root/apps/my-demo-app-android.apk \
+#        npm run test:native
+#   6. docker compose down
+
+services:
+  android-emulator:
+    image: budtmo/docker-android:emulator_13.0
+    container_name: appium-android-emulator
+    privileged: true # requis pour l'accélération matérielle de l'émulateur (KVM)
+    ports:
+      - '6080:6080' # interface web noVNC pour visualiser l'écran de l'émulateur
+      - '5555:5555' # ADB
+      - '4723:4723' # serveur Appium
+    environment:
+      - EMULATOR_DEVICE=Samsung Galaxy S10
+      - WEB_VNC=true
+      - APPIUM=true
+      - AUTO_RECORD=false
+      - DEVICE=Samsung Galaxy S10
+    volumes:
+      - ./apps:/root/apps
+      - android-avd:/root/.android/avd
+    devices:
+      - /dev/kvm # accélération matérielle (nécessite un hôte Linux avec KVM disponible ;
+      # sous macOS/Windows, retirer cette ligne — l'émulateur tournera alors
+      # en émulation logicielle, plus lente mais fonctionnelle)
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4723/status']
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+
+volumes:
+  android-avd:
