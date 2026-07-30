@@ -70,7 +70,6 @@ export const config: WebdriverIO.Config = {
 
   cucumberOpts: {
     require: [path.join(projectRoot, 'src/test/support/**/*.ts')],
-    requireModule: ['ts-node/register'],
     backtrace: false,
     dryRun: false,
     failFast: false,
