@@ -11,6 +11,11 @@
  *    se connecte directement au conteneur docker-android qui embarque déjà
  *    Appium + un émulateur Android prêt à l'emploi. Voir `docker-compose.yml`.
  */
+
+import path from 'node:path';
+
+const projectRoot = path.join(__dirname, '..');
+
 const useExternalAppium = Boolean(process.env.APPIUM_HOST);
 
 export const config: WebdriverIO.Config = {
@@ -64,7 +69,7 @@ export const config: WebdriverIO.Config = {
   ],
 
   cucumberOpts: {
-    require: ['./src/test/support/**/*.ts'],
+    require: [path.join(projectRoot, 'src/test/support/**/*.ts')],
     requireModule: ['ts-node/register'],
     backtrace: false,
     dryRun: false,
