@@ -32,10 +32,19 @@ jobs:
       - name: Download demo APK
         run: |
           mkdir -p apps
-          curl -L -o apps/my-demo-app-android.apk \
-            https://github.com/saucelabs/my-demo-app-android/releases/latest/download/mda-2.2.0-25.apk || \
-          echo "Adapter l'URL/version de la release si le nom d'asset a changé"
-
+          ASSET_URL=$(curl -sf https://api.github.com/repos/saucelabs/my-demo-app-android/releases/latest \
+            | jq -r '.assets[] | select(.name | endswith(".apk")) | .browser_download_url' | head -n1)
+          echo "Resolved APK asset URL: $ASSET_URL"
+          if [ -z "$ASSET_URL" ]; then
+            echo "::error::Could not resolve an .apk asset from the latest saucelabs/my-demo-app-android release"
+            exit 1
+          fi
+          curl -fL -o apps/my-demo-app-android.apk "$ASSET_URL"
+          if [ "$(head -c2 apps/my-demo-app-android.apk)" != "PK" ]; then
+            echo "::error::Downloaded file is not a valid APK (missing ZIP/PK signature)"
+            exit 1
+          fi
+          
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

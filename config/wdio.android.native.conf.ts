@@ -21,10 +21,7 @@ export const config: WebdriverIO.Config = {
     {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
-      'appium:deviceName': process.env.ANDROID_DEVICE_NAME || 'emulator-5554',
       'appium:app': process.env.ANDROID_APP_PATH || path.join(projectRoot, 'apps/my-demo-app-android.apk'),
-      'appium:appPackage': 'com.saucelabs.mydemoapp.rn',
-      'appium:appActivity': '.MainActivity',
       'appium:autoGrantPermissions': true,
       'appium:newCommandTimeout': 240,
     },
