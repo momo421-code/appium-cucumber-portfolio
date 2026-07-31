@@ -44,6 +44,10 @@ class InventoryPage extends BasePage {
   }
 
   async addToCart(name: string): Promise<void> {
+    const alreadyInCart = await this.isDisplayed(this.removeButtonFor(name));
+    if (alreadyInCart) {
+      return;
+    }
     await this.clickWhenClickable(this.addToCartButtonFor(name));
   }
 
