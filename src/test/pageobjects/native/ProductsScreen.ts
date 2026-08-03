@@ -1,19 +1,30 @@
 import BasePage from '../BasePage';
 
+
 class ProductsScreen extends BasePage {
-  get cartBadge() {
-    return '~cart-badge';
+  get screenTitle() {
+    return '~title'; // content-desc="title", resource-id=".../productTV", text="Products"
   }
   get menuButton() {
-    return '~open menu';
+    return '~View menu'; // resource-id=".../menuIV"
+  }
+  get sortButton() {
+    return '~Shows current sorting order and displays available sorting options'; // resource-id=".../sortIV"
+  }
+  get cartButton() {
+    return '~View cart'; // resource-id=".../cartRL", conteneur cliquable du panier
+  }
+  get cartIcon() {
+    return '~Displays number of items in your cart'; // resource-id=".../cartIV"
   }
 
-  productByName(name: string): string {
-    return `//*[@content-desc="Products"]//*[contains(@content-desc, "${name}")]`;
+
+  productImageByName(name: string): string {
+    return `//android.widget.TextView[@resource-id="com.saucelabs.mydemoapp.android:id/titleTV" and @text="${name}"]/preceding-sibling::android.widget.ImageView[@resource-id="com.saucelabs.mydemoapp.android:id/productIV"]`;
   }
 
   async openProduct(name: string): Promise<void> {
-    await this.clickWhenClickable(this.productByName(name));
+    await this.clickWhenClickable(this.productImageByName(name));
   }
 
   async openMenu(): Promise<void> {
@@ -26,15 +37,11 @@ class ProductsScreen extends BasePage {
   }
 
   async openCart(): Promise<void> {
-    await this.clickWhenClickable(this.cartBadge);
+    await this.clickWhenClickable(this.cartButton);
   }
 
-  async getCartBadgeCount(): Promise<string> {
-    return this.getText(this.cartBadge);
-  }
-
-  async isCartBadgeDisplayed(): Promise<boolean> {
-    return this.isDisplayed(this.cartBadge);
+  async isCartIconDisplayed(): Promise<boolean> {
+    return this.isDisplayed(this.cartIcon);
   }
 }
 

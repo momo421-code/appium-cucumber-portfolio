@@ -43,8 +43,9 @@ Given('j\'ai ajouté le produit {string} au panier', async function (this: Custo
 });
 
 Then('le badge du panier affiche {string}', async function (count: string) {
-  const badgeText = await ProductsScreen.getCartBadgeCount();
-  expect(badgeText).toBe(count);
+  await ProductsScreen.openCart();
+  const items = await $$(CartScreen.cartItems);
+  expect(items.length).toBe(Number(count));
 });
 
 When('j\'ouvre le panier', async function () {
